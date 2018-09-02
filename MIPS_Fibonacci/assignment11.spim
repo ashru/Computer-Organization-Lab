@@ -1,0 +1,204 @@
+# Assignment 11	
+# Group Number : 4
+# Ashrujit Ghoshal (14CS10060)
+# Sayan Ghosh (14CS10061)
+
+
+
+.data	
+	input: .asciiz "Enter an integer m (no less than 2): "
+	array_open: .asciiz "S[" #Output the S[j]
+	closing_brac: .asciiz "]: "	        # Output of closing bracket
+	new_line: .asciiz "\n" 	# Output newline character
+	tab : .asciiz "\t"
+.text
+.globl main
+
+main:
+	li $v0, 4						# 4 is the code for print_str
+	la $a0, input					# load the string for input prompt
+	syscall							# system call for print
+	li $s3,0						# s3 is the counter for printing , set to zero as index starts from 0
+	li $v0, 5						# 5 is the code for integer input
+	syscall							# system call to take input 'm'
+	move $s0, $v0					# move the integer 'm' from v0 to s0
+	
+	ble $s0, 1, start_proc 			# if s0<=1 then branch to start_proc label			
+	add $s0, $s0, 1					# increment s0 by 1
+
+start_proc:							# label
+	move $fp, $sp					# move the current stack pointer to  frame pointer
+	sub $s2, $sp, 100000			# s2 = sp - 100000	
+
+	move $t0,$zero					# t0 = 0 , t0 is a temporary variable to set zero values		
+	li $t1, 1						# t1 = 1 , t1 is a temporary variable to set value as 1
+	li $t2, 2						# t2 = 1 , t2 is a temporary variable to set value as 2
+
+	sw $t2, -4($sp)					# save t2 to stack
+
+	sw $t1, -8($sp)					# save t1 to stack
+
+	sw $t0, -12($sp)				# save t2 to stack
+	sw $t1, -16($sp)				# save t2 to stack
+	sw $t0, -20($sp)				# save t2 to stack
+
+	sub $a3, $sp, 12				# address of the string in stack
+	sub $a2, $sp, 8					# address of f_m-1
+	sub $a1, $sp, 4					# address of f_m-2
+	move $a0, $s0 					# address of m
+	jal fibWord						# call the fibWord function
+	
+
+				
+
+	
+
+	bne $s0, 0, nonzero				# if s0 not equal to 0 then branch to nonzero function
+	lw $s1, -8($sp)					# load s1 from stack (sp-8)
+	j order							# jump to order label
+
+nonzero:							# label 
+	lw $s1, -4($sp)					# load word s1 from stack (sp-4)
+
+order:								# label	
+	move $t1, $zero					# set t1 as zero
+	sub $t2, $sp, 12				# set t2 = sp-12
+
+
+print1:								# label , print1 is a  function for printing the last string
+	lw $s2,-8($sp)					# load word from stack , (sp-8)
+	li $v0, 4 						# 4 is the code for print_str	
+	la $a0,array_open 				# load the string to print				
+	syscall 						# system call to print the string
+	li $v0, 1						# 1 is the code for print_int							
+	move $a0, $s3 					# move or set the integer to print at a0		
+	syscall 						# system call to print the integer
+	add $s3,$s3,1					# increment the index by 1
+	li $v0, 4 						# 4 is the code for print_str	
+	la $a0,closing_brac 			# load the string to print		
+	syscall 						# system call to print the string
+
+
+print2:								# label , print2 is a helper function to print1
+
+	bge $t1,$s2,print3				# when all characters printed,jump to print3
+	la $v0, 1						# 1 is the code for print_int
+	lw $a0, 0($t2)					# print the element at address pointed by t2
+	syscall							# syscall for printing
+
+	sub $t2, $t2, 4					# move to next element
+	add $t1, $t1, 1					# increment loop counter
+	j print2						# jump to print2 label
+
+print3:								# label , print3 is a helper function to print
+	sll $t1,$s2,2					# multiply s2 by 4 and store in t1
+	add $t2,$t2,$t1					# move pointer to beginning of string
+	li $v0, 4 						# 4 is the code to print_str		
+	la $a0,new_line 				# load the string to print			
+	syscall 						# system call to print 
+
+	lw $s1, -4($sp)					# load value of f_n-1 from stack 
+	move $t1,$zero					# set t1 as zero
+	li $v0, 4 						# 4 is the code for print_str		
+	la $a0,array_open 				# load the string to print				
+	syscall 						# system call to print the integer
+	li $v0, 1						# 1 is the code to print_int						
+	move $a0, $s3 					# load the number to print at a0	
+	syscall 						# system call to print the integer
+	add $s3,$s3,1					# increment the counter by 1
+	li $v0, 4 						# 4 is the code for print_str	
+	la $a0,closing_brac 			# load the string to print				
+	syscall 						# system call to print the integer
+
+print:								# helper for printing the last string
+	bge $t1, $s1, exit_point		# if printing is done move to exit point
+	la $v0, 1						# 1 is the code to print_int	
+	lw $a0, 0($t2)					# load the number to print at a0
+	syscall							# system call to print the integer
+
+	sub $t2, $t2, 4					# move to next element of string  
+	add $t1, $t1, 1					# increment loop counter
+	j print							# jump to print
+	
+
+exit_point:						# label
+
+	li $v0, 10 			# 10 is the code to exit
+	syscall 			# system call to exit	
+
+
+
+
+
+fibWord:	   						# the required recursive function (this is the label of the function)
+	bgt $a0, 1, recursive_helper	# if a0>=1 then jump to recursive helper code  ( a0 is the value of m)
+	jr $ra							# jump and link by register ra
+
+recursive_helper:					# label of recursive helper
+	sub $s2, $s2, 4					# s2 = s2 - 4
+	sw $ra, 0($s2)					# save the return address to stack
+	sub $a0, $a0, 1					# decrease the value of m
+	jal fibWord						# jump and link to fibword function (recursive call)
+	
+	lw $t1, -4($sp)					# load word form stack
+	lw $t2, -8($sp)					# load word form stack
+	sub $t7, $sp, 12				# t7 = sp-12 , i.e. starting address of the string
+
+	move $t0, $t2					# move t2 to t0  i.e. current m
+	sll $t6,$t1,2					# t6 = 4*t1   
+	move $t3,$t7					# t3 = t7
+	move $t4,$zero					# set t4 as zero	
+ploop:								# label
+	beq $t4,$t1,endp 				# if t4==t1 then jump to endp	
+	add $t4,$t4,1					# increment t4 (loop counter) 
+	sub $t3,$t3,4					# goto next index
+	j ploop							# jump to ploop
+
+
+endp:								# label
+	move $t5, $t7					# t5 = t7
+	li $v0, 4 						# 4 is the code for print_str
+	la $a0,array_open 				# load the string to print		
+	syscall 						# system call to print
+	li $v0, 1						# 1 is the code for print_int							
+	move $a0, $s3 					# load the integer to print to a0			
+	syscall 						# system call to print
+	add $s3,$s3,1					# increment the index
+	move $t5, $t7					# t5 = t7
+	li $v0, 4 						# 4 is the code for print_str		
+	la $a0,closing_brac 			# load the string to print				
+	syscall 						# system call to print
+
+
+loop:
+	beq $t0, 0, terminate_loop		#loop condition
+
+	lw $t4, 0($t5)			# load the word from stack
+	li $v0, 1				# 1 is the code to print int									
+	move $a0,$t4 			# move the integer to print				
+	syscall 				# system call to print 
+	sw $t4, 0($t3)			# save the word to t3
+
+	sub $t0, $t0, 1			# decrement loop
+	sub $t3, $t3, 4			# next index
+	sub $t5, $t5, 4			# next index
+	j loop					# jump to loop
+
+
+terminate_loop:					# label
+	li $v0, 4 				# 4 is the code to print_str				
+	la $a0,new_line 		# load the string to print						
+	syscall 				# system call to print
+
+	lw $t1, -4($sp)			# t1 -> F(m-1)
+	lw $t2, -8($sp)			# t2 -> F(m-2)
+	add $t3, $t1, $t2    	# update F(m-1) and F(m-2)
+	sw $t1, -8($sp)         # save to stack      	
+	sw $t3, -4($sp)  		# save to stack
+	
+
+	add $s2, $s2, 4			# s2 = s2 + 4
+	lw $ra, 0($s2)			# load the return address	
+	
+	jr $ra					# jump by giving the return address
+	

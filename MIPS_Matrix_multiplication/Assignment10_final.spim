@@ -1,0 +1,303 @@
+# Assignment 10	
+# Group Number : 4
+# Ashrujit Ghoshal (14CS10060)
+# Sayan Ghosh (14CS10061)
+
+main:
+.data
+	input: .asciiz "Enter three positive integers s, m and n:\n"
+	matrix_prompt_A: .asciiz "Matrix A is:\n"
+	matrix_prompt_B: .asciiz "Matrix B is:\n"
+	matrix_prompt_C: .asciiz "Matrix C is:\n"
+	new_line: .asciiz "\n"
+	tab : .asciiz "\t"
+
+.text
+
+	move $fp, $sp 	# Backup sp value before allocating array
+	
+	li $v0, 4 		#system call code for print_str
+	la $a0, input 	#address of string to print
+	syscall 		#take input
+	
+	li $v0, 5 		#system call code for taking integer input
+	syscall 		#take input
+	move $t0, $v0 	#move input taken (s) in $t0
+	sub $sp,$sp,4 	#move stack pointer by 4 bytes to allocate space for s
+	sw $t0,0($sp) 	#save value of $t0 (s) in stack
+	
+
+	li $v0, 5 		# system call code for taking integer input
+	syscall 		# take input
+	move $t1, $v0 	# move input taken (m) in $t1
+	sub $sp,$sp,4 	# move stack pointer by 4 bytes to allocate space for m
+	sw $t1,0($sp) 	# save value of $t1 (m) in stack
+
+	li $v0, 5 		# system call code for taking integer input
+	syscall 		# take input
+	move $t2, $v0 	# move input taken (n) in $t2
+	sub $sp,$sp,4 	# move stack pointer by 4 bytes to allocate space for n
+	sw $t2,0($sp) 	# save value of $t2 (n) in stack
+
+	move $s0,$t1 	# move value in $t0 (n) to $s0
+	mul $s0,$s0,$t2	# $s0 = n*m
+	sll $s1,$s0,2 	# left shift $s0 by 2 bits i.e. multiply n with 4
+	mul $s1,$s1,3 	# multiply $s1 by 3
+
+	sub $sp,$sp,$s1 # move stack pointer ($sp) by (4*n*m*3) ($s1) bytes to allocate memory for arrays A, B, C
+
+	move $s0,$fp 	# move value of $fp in $s0 
+	sub $s0,$s0,12	# subtract 12 bytes from current value of $s0 
+	sub $s0,$s0,4 	# subtract 4 bytes from current value of $s0
+	sw $t0,0($s0) 	# store first array element of array A (with value x0)
+
+	move $t4,$t0 	# initialize $t4 to $t0
+	li $s1,1 		# initialize $s1 to 1
+
+	move $s0,$t1 		# move value in $t1 to $s0
+	mul $s0,$s0,$t2 	# multiply $s0 with $t2 (to get value n*m)
+
+SetArrayElementsA: 							# start of loop for setting values of array A 
+	slt $s2,$s1,$s0 						# if ($s1 < $s0) then $s2 = 1 else $s2 = 0 
+	beq $s2,$zero,SetArrayElementsADone 	# if ($s2 == $zero) then goto SetArrayElementsADone label
+
+	sll $s2,$s1,2 		# left shift $s1 by 2 bits i.e. multiply i (loop variable) with 4 and put the result in $s2
+	sub $s2,$fp,$s2 	# $s2 points to the address $fp - 4*$s1   
+	sub $s2,$s2,16 		# $s2 points to the address ($fp - 4*$s1 - 16) (i.e. the address of array[i]) 
+	mul $v0,$t4,330 	# $v0 = X(n)*330
+	add $v0,$v0,100 	# $v0 = X(n)*330 + 100
+	rem $v0,$v0,2303 	# $v0 = ( X(n)*330 + 100 ) % 2303
+	sw $v0,0($s2) 		# store the input array element taken to memory at address $s2
+	move $t4,$v0 		# update value of $t4 for next iteration to the newly computed array element
+	
+	addi $s1,$s1,1 			# incrementing loop variable $s1 (i) by 1
+	j SetArrayElementsA 	# goto SetArrayElementsA label to continue to next iteration
+
+SetArrayElementsADone: 		#beginning of SetArrayElementsADone label (end of first loop)
+
+	move $s0,$fp 		#move value in $fp to $s0
+	move $t3,$t1 		#$t3 = m
+	mul $t3,$t3,$t2 	#$t3 = m*n
+	mul $t3,$t3,4 		#$t3 = 4*m*n
+	sub $s0,$s0,$t3 	#$s0 = $fp - 4*m*n
+	sub $s0,$s0,16 		#$s0 = $fp - 4*m*n -16
+
+	move $t4,$t0 	#$t4 = s
+	add $t4,$t4,10 	#$t4 = s + 10
+	sw $t4,0($s0) 	#store value of (s + 10) at $s0 address 
+	li $s1,1 		#initialize $s1 to 1
+
+	move $s7,$t1 	
+	mul $s7,$s7,$t2  	#move value in $t0 (m*n) to $s0
+
+SetArrayElementsB: 							# start of loop for setting values of array B 
+	slt $s2,$s1,$s7 						# if ($s1 < $s7) then $s2 = 1 else $s2 = 0 
+	beq $s2,$zero,SetArrayElementsBDone 	# if ($s2 == $zero) then goto ReadArrayElementsDone label
+
+	move $s0,$fp 		# move value of $fp in $s0
+	#sub $s0,$s0,16		# subtract 16 bytes from $s0
+	move $t3,$t1 		# $t3 = n
+	mul $t3,$t3,$t2 	# $t3 = n*m
+	mul $t3,$t3,4 		# $t3 = 4*n*m
+	sub $s0,$s0,$t3 	# $s0 = $fp - 4*n*m
+	sll $s2,$s1,2 		# left shift $s1 by 2 bits i.e. multiply i (loop variable) with 4 and put the result in $s2
+	sub $s2,$s0,$s2 	# $s2 points to the address $fp - 4*n*m - 4*$s1   
+	sub $s2,$s2,16		# subtract 16 bytes from $s2
+	mul $v0,$t4,330 	# $v0 = $t4 * 330
+	add $v0,$v0,100 	# $v0 = $t4 * 330 + 100
+	rem $v0,$v0,2303 	# $v0 = ($t4 * 330 + 100) % 2303
+	sw $v0,0($s2) 		# store the input array element taken to memory at address $s0
+	move $t4,$v0 		# update value of $t4
+	
+	addi $s1,$s1,1 		# incrementing loop variable $s1 (i) by 1
+	
+	j SetArrayElementsB 	# goto SetArrayElementsB label to continue to next iteration
+
+SetArrayElementsBDone: 		# beginning of SetArrayElementsBDone label (end of second loop)
+
+	#updating arguments appropriately for matPrint function for A
+
+	li $v0, 4 					#system call code for print_str
+	la $a0, matrix_prompt_A 	#address of string to print
+	syscall 					#take input
+
+	move $a0,$t1  	# $a0 = m  move the value of number of rows (m) to $a0
+	move $a1,$t2 	# $a1 = n  move the value of number of columns (n) to $a1
+	move $s0,$fp 	# $s0 = $fp  
+	sub $s0,$s0,16 	# $s0 = $fp -16
+	move $a2,$s0 	# $a2 = $s0 (starting address of first element of matrix A)
+
+	jal matPrint 	#call matPrint function	for matrix A
+
+	#updating arguments appropriately for matPrint function for B
+
+	li $v0, 4 					# system call code for print_str
+	la $a0, matrix_prompt_B 	# address of string to print
+	syscall 					# take input
+
+	move $a0,$t1 		# $a0 = m
+	move $a1,$t2 		# $a1 = n
+	move $s0,$fp  		# $s0 = $fp
+	sub $s0,$s0,12 		# $s0 = $fp -12
+	move $t3,$t1 		# $t3 = m
+	mul $t3,$t3,$t2 	# $t3 = n*m
+	mul $t3,$t3,4 		# $t3 = 4*n*m
+	sub $s0,$s0,$t3 	# $s0 = $fp -12 - 4*n*m
+	sub $s0,$s0,4		# $s0 = $fp -12 - 4*n*m -4 
+	move $a2,$s0 		# $a2 = $s0 (starting address of first element of matrix B)
+	 
+	jal matPrint 		#call matPrint function for matrix B
+
+	#updating arguments appropriately for matAdd function
+					
+	li $v0, 4 	#system call code for print_str
+	la $a0, matrix_prompt_C 	#address of string to print
+	syscall 	#take input
+
+	move $a0,$t1 	# $a0 = m
+	move $a1,$t2	# $a1 = n
+	move $s0,$fp	# $s0 = $fp
+	sub $s0,$s0,16	# $s0 = $fp -16
+	move $a2,$s0 	# a2 = $s0 (starting address of first element of matrix A)
+
+	move $s0,$fp 		# $s0 = $fp
+	sub $s0,$s0,12 		# $s0 = $fp - 12
+	move $t3,$t1		# $t3 = m
+	mul $t3,$t3,$t2 	# $t3 = n*m
+	mul $t3,$t3,4 		# $t3 = 4*n*m
+	sub $s0,$s0,$t3 	# $s0 = $fp - 12 - 4*n*m
+	sub $s0,$s0,4 		# $s0 = $fp - 12 - 4*n*m - 4
+	move $a3,$s0 		# $a3 = $s0  (starting address of first element of matrix B)
+
+	move $s0,$fp 		# $s0 = $fp
+	sub $s0,$s0,12  	# $s0 = $fp - 12
+	move $t3,$t1 		# $t3 = m
+	mul $t3,$t3,$t2 	# $t3 = n*m
+	mul $t3,$t3,8 		# $t3 = 8*n*m
+	sub $s0,$s0,$t3 	# $s0 = $fp - 12 - 8*n*m	
+	sub $s0,$s0,4 		# $s0 = $fp - 12 - 8*n*m - 4
+	move $s3,$s0  		# $a3 = $s0 (starting address of first element of matrix C)
+
+	jal matrixadd 		# call matAdd function for adding matrix A and matrix B and storing the sum in matrix C
+
+	#updating arguments appropriately for matPrint function for C
+
+	move $a0,$t1 		# $a0 = m
+	move $a1,$t2 		# $a1 = n
+	move $s0,$fp 		# $s0 = $fp
+	sub $s0,$s0,12 		# $s0 = $fp - 12
+	move $t3,$t1 		# $t3 = m
+	mul $t3,$t3,$t2 	# $t3 = n*m
+	mul $t3,$t3,8 		# $t3 = 8*n*m
+	sub $s0,$s0,$t3 	# $s0 = $fp - 12 - 8*n*m
+	sub $s0,$s0,4		# $s0 = $fp - 12 - 8*n*m - 4
+	move $a2,$s0 		# a2 = $s0 (starting address of first element of matrix C)
+	 
+	jal matPrint 		#call matPrint function for printing matrix C
+
+	move $s0,$t1 		# move value in $t0 (n) to $s0
+	mul $s0,$s0,$t2		# $s0 = n*m
+	sll $s1,$s0,2 		# left shift $s0 by 2 bits i.e. multiply n with 4
+	mul $s1,$s1,3 		# multiply $s1 by 3
+
+	add $sp,$sp,$s1 	# move stack pointer ($sp) by (4*n*m*3) ($s1) bytes to deallocate memory for arrays A, B, C
+	add $sp,$sp,12 		# move stack pointer ($sp) by (4*n*m*3) ($s1) bytes to deallocate memory for variables s,m,n
+
+	li $v0, 10 			# system call code for exiting program
+	syscall 			# make syscall to exit program
+
+
+matPrint: 	#function to do operation of matrix printing
+	move $t3,$zero 	# $t3 = 0
+	move $t1,$a0 	# $t1 = m
+	mul  $t7,$a0,$a1 
+
+
+	matPrint_while_1: 	# starting of outer while loop
+	
+	slt $t6,$t3,$t7 					# $t6 = 1 if ($t3 < m) else $t6 = 0
+	beq $t6,0,matPrint_while_1_end 		# if($t6 == 0) then goto label matPrint_while_1_end
+	move $t4,$zero 						# $t4 = 0
+	
+
+	move $s0,$t3 						# $s0 = m*i + j  finding the address of the element at (i,j) position by using formuala for row-major order
+	mul $s0,$s0,4 						# $s0 = 4*(m*i + j)  multiply $s0 by 4  as the size of each element is 4 bytes
+	sub $s1,$a2,$s0 					# $s1 = $a2 (starting address of matrix to be printed) - 4*(m*i + j)
+	li $v0, 1							# system call code for print_int
+	lw $t5,0($s1) 						# load the value of i-th array element in $t5
+	move $a0, $t5 						# move value in $t5 (current array element) to $a0
+	syscall 							# print current array element
+
+	li $v0, 4 							# system call code for print_str
+	la $a0,tab 							# address of string to print
+	syscall 							# print string
+
+
+
+	
+	add $t3,$t3,1 						# $t3 = $t3 + 1
+	rem $s7,$t3,$a1						# $s7 stores the remainder when $t3 is divided by $a1
+	beqz $s7,print_newline				# if s7==0 ie end of row,we print a newline
+	
+	j matPrint_while_1					# loop
+	
+	
+
+	matPrint_while_1_end: 				# end of outer while loop
+
+	jr $ra 								# return address to caller function
+print_newline:
+	li $v0, 4 							# system call code for print_str
+	la $a0,new_line 					# address of string to print
+	syscall 							# print string 	
+	j matPrint_while_1
+
+
+		
+		
+matrixadd: 								# function to do operation of matrix addition
+	move $t3, $zero 					# $t3 = 0
+	move $t1, $a0 						# $t1 = m
+	mul $t7,$a0,$a1
+	matAdd_while_1: 					# starting of outer while loop
+	
+	slt $t6,$t3,$t7 					# $t6 = 1 if ($t3 < m) else $t6 = 0
+	beq $t6,0,matAdd_while_1_end 		# if($t6 == 0) then goto label matAdd_while_1_end
+	move $t4,$zero 						# $t4 = 0
+	
+	
+	
+	
+	move $s0,$t3 			# $s0 = i*m+j
+	
+	mul $s0,$s0,4			# $s0 = (m*i + j ) * 4 -- row major order calculation we find the location of the i,j element . $s0 stores a temporary value which helps tpo find the final address
+	sub $s1,$a2,$s0 		# $s1 points to A[i][j] 
+
+	
+
+	lw $t5,0($s1) 			# load the value of A[i][j] element in $t5
+	
+	move $s0,$t3 			# $s0 = i*m+j
+	
+	mul $s0,$s0,4 			# $s0 = 4*(i*m + j) -- row major order calculation we find the location of the i,j element . $s0 stores a temporary value which helps tpo find the final address
+	sub $s1,$a3,$s0 		# $s1 points to starting address of B[i][j]
+	
+	lw $s6,0($s1) 			# load the value of B[i][j] element in $s6
+	
+	move $s0,$t3			# $s0 = i*m+j
+	
+	mul $s0,$s0,4 			# $s0 = 4*(i*m + j)   -- row major order calculation we find the location of the i,j element . $s0 stores a temporary value which helps tpo find the final address
+	sub $s1,$s3,$s0 		# $s1 points to starting address of C[i][j]
+	
+	add $s7, $t5, $s6 		# $s7 = A[i][j] + B[i][j]
+
+	
+	sw $s7,0($s1) 			# C[i][j] = A[i][j] + B[i][j]
+	
+
+	
+	add $t3,$t3,1 			# incrementing loop variable $t3 by 1
+	j matAdd_while_1 		# goto matAdd_while_1 label to continue to next iteration
+	matAdd_while_1_end: 	# end of first while loop
+	
+	jr $ra 					# return address to caller function

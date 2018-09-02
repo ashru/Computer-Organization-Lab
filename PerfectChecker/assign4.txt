@@ -1,0 +1,62 @@
+GROUP-4
+Members:
+Ashrujit Ghoshal(14CS10060)
+Sayan Ghosh (14CS10061)
+
+
+
+
+
+Module --  isPerfect
+
+State encoding :
+
+One hot encoding is used 
+ 
+q0  -- 0000000001
+q1  -- 0000000010 
+q2  -- 0000000100
+q3  -- 0000001000
+q4  -- 0000010000
+q5  -- 0000100000
+q6  -- 0001000000
+q7  -- 0010000000
+q8  -- 0100000000
+q9  -- 1000000000
+
+
+sel = q6 or q5
+ldN = q0
+ldSum = q1 or q5
+ldI = q1 or q6
+divide = q2
+TS = q5
+TI = q5 or q6
+display = q7
+over_main = q9
+
+fselect[0] = q5 or q6
+fselect[1] = q6
+fselect[2] = 0
+
+-------------------------
+Module : divider
+
+One hot encoding is used 
+ 
+q0  -- 00001
+q1  -- 00010 
+q2  -- 00100
+q3  -- 01000
+q4  -- 10000
+
+ldRem = q0 or q1 or q4
+sel1 = q4
+ldDivor = q0 or q1
+TR = q4
+TD = q4
+over = q3
+
+fselect[0] = 0
+fselect[1] = q4
+fselect[2] = 0

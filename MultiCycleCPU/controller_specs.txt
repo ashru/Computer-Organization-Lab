@@ -1,0 +1,169 @@
+*************************************************************** Assignment 14 ***************************************************************
+			GROUP NUMBER : 04
+			Members:
+			1.Ashrujit Ghoshal(14CS10060)
+			2.Sayan Ghosh(14CS10061)
+			
+		********************************************************************************************************************************************
+											TEXT REPORT FOR ASSIGNMENT 14 (CONTROLLER SPECIFICATION )
+
+==> Aim :  To explain the controller specification with respect to the datapth drawn for the processor by us.
+----------
+ 
+ The control unit in a processor is responsible for setting all the control signals appropriately so that each instruction is executed properly. The control unit’s input is usually a 16-bit or 32-bit instruction word.
+ The outputs of the control unit are the values for the blue control signals in the datapath. However, since most of the control signals can be generated from the instruction opcode alone, we don't need to send the entire instruction as input to the contraol unit. 
+ In our case, we send not more than 7 bits extracted from the instruction as input to the control unit. 
+ As per our datapath specifications, the control unit generates the following output signals : 
+	--> PCWrite : This control signal is sent from the Main Control Unit to the PC register. It is asserted when the value value for PC needs to be different 				  from the default next value i.e. (PC+2).
+				  It is asserted when the type of operation to be performed is 'jump'(i.e. 'j') type or sub-routine call (i.e. 'jal' or 'jr').
+				  
+	--> AddrSrc : This control signal is sent from the Main Control Unit to the multiplexer immediately after PC register. It chooses the address which is to be 				  accessed in memory among three inputs to the mutiplexer.
+				  Its values and the corresponding effects are as follows : 
+				  -> 00 : PC register is selected		  
+				  -> 01 : MDR register is selected
+				  -> 10 : ALUOutput register is selected
+
+	--> MemRead : This signal is sent from the Main Control Unit to the memory unit. It has no effect when it is deasserted. When it is asserted, the contents at 				   the location specified by the 'Address' input of the memory unit is put in the MDR register.
+				  
+	--> MemWrite : This signal is sent from the Main Control Unit to the memory unit. It has no effect when it is deasserted. When this signal is asserted, 				   memory contents at the location specified by the 'Address' input of the memory unit is replaced by value on 'Write data' input input of memory 				   unit.
+	
+	--> MDRMemRead : The signal to read data into memory from MDR
+
+	--> MDRRead : Read signal for MDR
+
+	--> MARWrite : Write signal 
+
+	--> PCRead : To read the current instruction address to the PC register
+
+	--> TPC : The tristate buffer control signal to load the value of PC register to the bus.
+
+	--> TMDR : The tristate buffer control signal to load the value of MDR to the bus.
+
+	--> MARRead : Signal to read MAR from the output of connected mux.
+
+	--> MARSrc : The select line of the mux to decide the source of the MAR (i.e. which address to load into MAR)
+
+	--> T_Write : The control signal to write data into the temporary register
+
+	--> M_Write : It is used to set the sign flag
+
+	--> Z_Write : It is used to set the zero flag
+
+	--> C_Write : It is used to set the carry out flag
+
+	--> O_Write : It is used to set the overflow flag
+
+	--> TRD : Tristate buffer signal.
+
+	--> AlUOut_Reg_Read : It is the tristate buffer control signal  to load the ALU Out to the bus
+
+	--> Const_2_Read : This signal is used to load the constant 2 from the register into the bus. The signal is sent from main control unit.
+
+	--> Const_0_Read : This signal is used to load the constant 0 from the register into the bus. The signal is sent from main control unit.
+	
+	--> IRRead : This signal is sent from the Main Control Unit to the IR register. It has no effect when it is deasserted. When this signal is asserted, the 				 instruction is read from the current location of the PC register.
+
+
+	--> IRWrite : This signal is sent from the Main Control Unit to the IR register. It has no effect when it is deasserted. When this signal is asserted, the 				  output of the memory (instruction memory) at the current value of PC register is written into the IR register.
+
+
+
+				   
+	--> MDRWrite : This signal is sent from the Main Control Unit to the MDR register. It has no effect when it is deasserted. When this signal is asserted, the 				  output of the memory (instruction memory) at the current value of 'Address' input is written into the MDR register.
+
+    --> NWRWrite : This signal is sent from the Main Control Unit to the NWR(i.e. Next Word Register) register. It has no effect when it is deasserted. When this 				   signal is asserted, the output of the memory (instruction memory) at the current value of 'Address' input is written into the NWR register.
+
+	--> RegWriteSrc : This control signal is sent from the Main Control Unit to the multiplexer immediately before 'WD' input of the register file. It chooses 						the value which is to be written into the destination register among four inputs to the mutiplexer.
+					  Its values and the corresponding effects are as follows : 
+					  -> 00 : A register is selected
+					  -> 01 : NWR register is selected
+					  -> 10 : ALUOutput register is selected
+					  -> 11 : MDR register is selected
+
+	--> RegWrite : This signal is sent from the Main Control Unit to the Regsiter File. It has no effect when it is deasserted. When this signal is asserted, the 					general-purpose register selected by the 'Write register number' (i.e. 'WN' in our datapath) is written with the value of the 'Write data' (i.e. 					'WD') input.
+				   
+	--> ALUSrcA : This control signal is sent from the Main Control Unit to the multiplexer immediately before the first input of the ALU. It chooses the first 					operand of the ALU among three inputs to the mutiplexer.
+				  Its values and the corresponding effects are as follows : 
+				  -> 00 : A register is selected		  
+				  -> 01 : ALUOutput register is selected
+				  -> 10 : PC register is selected
+				  
+	--> ALUSrcB : This control signal is sent from the Main Control Unit to the multiplexer immediately before the second input of the ALU. It chooses the second 				operand of the ALU among four inputs to the mutiplexer.
+				  Its values and the corresponding effects are as follows : 
+				  -> 00 : B register is selected		  
+				  -> 01 : NWR register is selected
+				  -> 10 : MDR register is selected
+				  -> 11 : 2 (integer constant) is selected
+				  
+	--> ALU_Control_Signal :This control signal is sent from the Main Control Unit to the ALU Control Unit. It informs the ALU Control Unit about the class of operation 					which is to be performed by the ALU. However, the Main Control Unit does not know about the exact operation which is to be performed by the
+					ALU, but only the operation's class. e.g.: while performing an R-type operation, the Main Control Unit does not know about the specific R-type 	operation (among add, sub, or, and, cmp,mns) which is to be performed.
+					The following encoding has been used.
+					000:add
+					001:sub
+					010:or
+					011:and
+					100:cmp
+					101:mns
+ Apart from the above mentioned control signals generated by the Main Control Unit , in some cases we need some extra information to choose among the possible inputs to a multiplier and/or to do an appropriate operation. 
+ This is achieved by extracting the required information from the value in the IR register i.e. the intruction obtained from the instruction memory. The following are the cases where such an approach is followed in our datapath:
+	  
+	--> The Main Control Unit needs to know the exact instruction that is needed to be performed so that it can appropriately set the control signals governing 		the operations of the various elements present in the datapath. However, we also need to maintain some constraints on how much information the Main
+	    Control Unit can know. 
+	    For example: the  Main Control Unit should not know about the exact operation which is to be performed by the ALU, but only the operation's class. 
+	    e.g.: while performing an R-type operation, the Main Control Unit should not know about the specific R-type operation (among add, sub, 	or, and, cmp) which is to be performed, that is, it only has the information that some R-type instruction is to be performed. 
+		
+		So, to send the operation class information to the Main Control Unit under the above mentioned constraints, we follow the folowing approach:
+		-> If the first bit of the IR register i.e. Ins[0] is 0, then we send to the Main Control Unit, this bit along with the bits Ins[4-6] giving the 			information about the specific addressing mode being used by the instruction.
+		   By doing this, the Main Control Unit is made aware of the fact that some R-type instruction is to be performed, but it doesn't know about the exact 			R-type operation to be performed.
+		-> If the first bit of the IR register i.e. Ins[0] is 1, then we send to the Main Control Unit, th bits Ins[0-6] i.e. the first 7 bits of the instruction 			fetched from the instruction memory. By doing this, the Main Control Unit
+		   is made aware of the class of the non-R-type instruction which is to be performed (among load, store, jump, jal and jr). But in case the instruction 			to be performed is 'jump', the Main Control Unit still doesn't know about the 
+		   specific jump instruction to be performed (among j, jz, jnz, jc, jnc, jv, jnv, jm, jnm).
+
+	--> To decide the value which is to be written into PC register, we use 3 multiplexers. The first among these two multiplexers receives as input the four 		flag-bits being output from the ALU i.e. zero bit, carry bit, overflow bit and minus bit.	This multiplexer selects a value among its 4 inputs
+		depending upon its control signal 'FlagSrc' (whose actual value is Ins[4-6] i.e. the 3 bits containing the information about the specific type of jump 		instruction). The output of this multiplexer is XNORed with the 8th bit of th IR regsiters' value i.e Ins[7] 
+		(which contains the information about whether the instruction is of "positive type" like jc,jz,jv,jm or of "negative type" like jnc,jnz,jnv,jnm). The 		output of this XNOR gate, i.e. the control signal 'PCSrc', serves as the control signal for the second multiplexer, which has 2 inputs : (PC+2) and       		(PC+2+NWR). 
+		If the control signal of this (2nd) multiplexer is equal to 1, the output of the 2nd multiplexer is the value PC+2+NWR, else it outputs the value PC+2. 		The 3rd multiplexer is used to handle the case of 'jr' (return type) instruction. If the control signal to this multiplexer 
+		i.e. 'Return' (whose actual value is Ins[0-3]) corresponds to the opcode of 'jr' instruction, PC gets the value stored in the 'A' register, else it gets 		the output of the 2nd multiplexer.
+			   
+ We have used a multi-cycle implementation because of the following reasons:
+ • Single-cycle implementation is inefficient, because the clock cycle must have the same length for every instruction in this single-cycle design, and the CPI will therefore be 1.
+ • In Single-cycle implementation, the clock cycle is determined by the longest path in the machine.
+ • In Single-cycle implementation, although the CPI is 1, the overall performance of a single-cycle implementation is not likely to be very good, since several of the instruction classes could fit in a shorter clock cycle.
+
+ 
+ Some examples of order of flow of FSM's fo some instructions are :
+ 
+ (1)li	r5, #100 :
+	IF Stage : MemRead = 1, ALUSrcA = 10, AddrSrc = 00, IRWrite = 1, ALUSrcB = 11, ALU_Control_Signal = 1000001, PCWrite = 1, FlagSrc = X (i.e. don't care), Return = 0, PCSrc = 0
+	ID Stage : PCWrite = 0 , AddrSrc = X, MemRead = 0, MemWrite = 0, IRWrite = 0, NWRWrite = 0, RegWriteSrc = X, RegWrite = 0, ALUSrcA = X, ALUSrcB = X, ALU_Control_Signal = X, FlagSrc = X, PCSrc = X, Return = X, MDRWrite = 0
+	NWF Stage : MemRead = 1, ALUSrcA = 10, AddrSrc = 00, NWRWrite = 1, ALUSrcB = 11, ALU_Control_Signal = 1000001, PCWrite = 1, FlagSrc = X, Return = 0, PCSrc = 0
+	WB Stage : RegWriteSrc = 01, PCWrite = 0 , AddrSrc = X, MemRead = 0, MemWrite = 0, IRWrite = 0, NWRWrite = 0, RegWrite = 0, ALUSrcA = X, ALUSrcB = X, ALU_Control_Signal = X, FlagSrc = X, PCSrc = X, Return = X, MDRWrite = 0 
+	
+ (2)subn r4, @-120(r2, r6) :
+	IF Stage : MemRead = 1, ALUSrcA = 10, AddrSrc = 00, IRWrite = 1, ALUSrcB = 11, ALU_Control_Signal = 0XXX100, PCWrite = 1, FlagSrc = X (i.e. don't care), Return = 0, PCSrc = 0
+	ID Stage : PCWrite = 0 , AddrSrc = X, MemRead = 0, MemWrite = 0, IRWrite = 0, NWRWrite = 0, RegWriteSrc = X, RegWrite = 0, ALUSrcA = X, ALUSrcB = X, ALU_Control_Signal = X, FlagSrc = X, PCSrc = X, Return = X 
+	NWF Stage : MemRead = 1, ALUSrcA = 10, AddrSrc = 00, NWRWrite = 1, ALUSrcB = 11, ALU_Control_Signal = 0XXX100, PCWrite = 1, FlagSrc = X, Return = 0, PCSrc = 0
+	EX1 Stage : ALUSrcA =00 , ALUSrcB = 01, PCWrite = 0 , AddrSrc = X, MemRead = 0, MemWrite = 0, IRWrite = 0, NWRWrite = 0, RegWriteSrc = X, RegWrite = 0, ALU_Control_Signal = X, FlagSrc = X, PCSrc = X, Return = X, MDRWrite = 0 
+	EX2 Stage : ALUSrcA =01 , ALUSrcB = 00, PCWrite = 0 , AddrSrc = X, MemRead = 0, MemWrite = 0, IRWrite = 0, NWRWrite = 0, RegWriteSrc = X, RegWrite = 0, ALU_Control_Signal = X, FlagSrc = X, PCSrc = X, Return = X, MDRWrite = 0 
+	MEM1 Stage : ALUSrcA =X , ALUSrcB = X, PCWrite = 0 , AddrSrc = 10, MemRead = 1, MemWrite = 0, IRWrite = 0, NWRWrite = 0, RegWriteSrc = X, RegWrite = 0, ALU_Control_Signal = X, FlagSrc = X, PCSrc = X, Return = X, MDRWrite = 1 
+	MEM2 Stage : ALUSrcA =X , ALUSrcB = X, PCWrite = 0 , AddrSrc = 01, MemRead = 1, MemWrite = 0, IRWrite = 0, NWRWrite = 0, RegWriteSrc = X, RegWrite = 0, ALU_Control_Signal = X, FlagSrc = X, PCSrc = X, Return = X, MDRWrite = 1 
+	EX3 Stage : ALUSrcA = 00 , ALUSrcB = 10, PCWrite = 0 , AddrSrc = 01, MemRead = 1, MemWrite = 0, IRWrite = 0, NWRWrite = 0, RegWriteSrc = X, RegWrite = 0, ALU_Control_Signal = X, FlagSrc = X, PCSrc = X, Return = X, MDRWrite = 1 
+	WB Stage : RegWriteSrc = 10, PCWrite = 0 , AddrSrc = X, MemRead = 0, MemWrite = 0, IRWrite = 0, NWRWrite = 0, RegWrite = 0, ALUSrcA = X, ALUSrcB = X, ALU_Control_Signal = X, FlagSrc = X, PCSrc = X, Return = X, MDRWrite = 0 
+
+ (3) j addr :
+	IF Stage : MemRead = 1, ALUSrcA = 10, AddrSrc = 00, IRWrite = 1, ALUSrcB = 11, ALU_Control_Signal = 0XXX100, PCWrite = 1, FlagSrc = X (i.e. don't care), Return = 0, PCSrc = 0
+	ID Stage : PCWrite = 0 , AddrSrc = X, MemRead = 0, MemWrite = 0, IRWrite = 0, NWRWrite = 0, RegWriteSrc = X, RegWrite = 0, ALUSrcA = X, ALUSrcB = X, ALU_Control_Signal = X, FlagSrc = X, PCSrc = X, Return = X 
+	NWF Stage : MemRead = 1, ALUSrcA = 10, AddrSrc = 00, NWRWrite = 1, ALUSrcB = 11, ALU_Control_Signal = 1000001, PCWrite = 1, FlagSrc = X, Return = 0, PCSrc = 0
+	EX1 Stage : ALUSrcA = 10 , ALUSrcB = 01, PCWrite = 0 , AddrSrc = X, MemRead = 0, MemWrite = 0, IRWrite = 0, NWRWrite = 0, RegWriteSrc = X, RegWrite = 0, ALU_Control_Signal = X, FlagSrc = X, PCSrc = X, Return = X, MDRWrite = 0 
+	EX2 Stage : PCWrite = 1 , AddrSrc = X, MemRead = 0, MemWrite = 0, IRWrite = 0, NWRWrite = 0, RegWriteSrc = X, RegWrite = 0, ALUSrcA = X, ALUSrcB = X, ALU_Control_Signal = X, FlagSrc = X, PCSrc = 1, Return = 0 
+ 
+
+
+
+
+
+
+
+
+
+	

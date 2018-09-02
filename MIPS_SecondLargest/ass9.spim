@@ -1,0 +1,169 @@
+# Assignment 9	
+# Group Number : 4
+# Ashrujit Ghoshal (14CS10060)
+# Sayan Ghosh (14CS10061)
+# We are treating 2nd largest element as the element which appears 2nd in the non increasing order.eg 2nd largest element among {23,23,20,21} is 23.Also if user enters n<2 we exit with an error message 
+# Registers used:
+# t0 - used to hold the size of input array.
+# s0 - used to hold the size of input array.
+# t1 - used to hold the loop variable.
+# s1 - used initially to store value f 4*n and later as the loop variable of the first loop.
+# sp - stack pointer.
+# fp - frame pointer.
+# s2 - used to hold a boolean result in some cases and also to hold the address of the i-th array element (fp + 4 + 4*s1) in other cases.
+# t2 - used to hold a boolean result in some cases and also to hold the address of the i-th array element (fp + 4 + 4*t1) in other cases.
+# t5 - used to hold value of the i-th element of the array.
+# t6 - used to hold value of the second largest element of the array.
+# t7 - used to hold value of the largest element of the array.
+# a0 - used to hold the value of address of string being printed at console or value of integer being output at console.
+# v0 - syscall parameter.
+
+main: 	#SPIM starts execution at main
+
+	.data
+	input: .asciiz "Enter the count of elements to be read:\n" 	# Input prompt to enter input size of array at console
+	invalid: .asciiz "Minimum count of elements allowed is 2\n" #Prompt if user enters count<2
+	next_int_input: .asciiz "Enter the next element:\n"	        # Prompt to enter next integer at console
+	output_start: .asciiz "The second largest number among [ " 	# Output message at console
+	output_comma: .asciiz " , " 								# Output message at console
+	output_mid: .asciiz " ] is " 								# Output message at console
+	output_period: .asciiz "." 									# Output message at console
+	
+	.text
+
+	li $v0, 4													# 4 is the system call code for print_str
+	la $a0, input 												# address of string to print
+	syscall 													# print string by making the system call
+
+	move $fp, $sp 												# Backup sp value to fp before allocating array
+	
+	li $v0, 5 													# 5 is the system call code for taking integer input
+	syscall 													# take input by making a system call
+	move $t0, $v0 												# move input taken (n) to $t0 from $v0
+	
+	ble $t0,1,InvInput
+
+	sub $sp,$sp,4 												# move stack pointer ($sp) by 4 bytes to allocate memory for n
+	sw $t0,0($sp)												# save n on stack  (sw means save word)
+
+	move $s0,$t0 												# move value in $t0 (n) to $s0
+	sll $s1,$s0,2 												# left shift $s0 by 2 bits i.e. multiply n with 4
+
+	sub $sp,$sp,$s1 											# move stack pointer ($sp) by 4*n ($s1) bytes to allocate memory for array
+
+	move $s1,$zero 												# initialize $s1 to 0
+	j ReadArrayElements											# as n>=2,jump to taking input array elements
+
+	InvInput:														# if n<2, input is invalid as we cannot find second largest with less than 2 elements
+	li $v0, 4													    # 4 is the system call code for print_str
+	la $a0, invalid 												# address of string to print
+	syscall 														# print string by making the system call
+	j Final 														# exit the program.
+	ReadArrayElements: 											# start of loop for taking input in array 
+		slt $s2,$s1,$s0 										# if ($s1 < $s0) then $s2 = 1 else $s2 = 0 
+		beq $s2,$zero,ReadArrayElementsDone 					# if ($s2 == $zero) then goto ReadArrayElementsDone label
+
+		li $v0, 4												# system call code for print_str
+		la $a0, next_int_input 									# address of string to print
+		syscall 												# print string
+		li $v0, 5 												# system call code for taking integer input
+		syscall 												# take new array element in input
+		
+		sll $s2,$s1,2 											# left shift $s1 by 2 bits i.e. multiply i (loop variable) with 4 and put the result in $s2
+		sub $s2,$fp,$s2 										# $s2 points to the address $fp - 4*$s1   
+		sub $s2,$s2,8 											# $s2 points to the address ($fp - 4*$s1 - 8) (i.e. the address of array[i]) 
+		sw $v0,0($s2) 											# store the input array element taken to memory at address $s2 
+		
+		addi $s1,$s1,1 											# incrementing loop variable $s1 (i) by 1
+		j ReadArrayElements 									# goto ReadArrayElements label to continue to next iteration
+
+	ReadArrayElementsDone: 										# beginning of ReadArrayElementsDone label (end of first loop)
+
+		li $v0, 4													# system call code for print_str
+		la $a0, output_start 										# address of string to print
+		syscall 													# print string
+
+		li $t1,2 													# initialize $t1 (i) to 2 (since we start comparing with third array element)
+
+		sub $s2,$fp,8 												# $s2 points to the address $fp - 8 (address of first array element)  
+		lw $t6,0($s2) 												# initialize $t6 (second largest element found fo far) with first element of array 
+		lw $t7,-4($s2) 												# initialize $t7 (largest element found fo far) with second element of array
+
+		li $v0, 1													# system call code for print_int
+		lw $t5,0($s2) 												# load the value of i-th array element in $t5
+		move $a0, $t5 												# move value in $t5 (current array element) to $a0
+		syscall 													# print current array element
+
+		li $v0, 4													# system call code for print_str
+		la $a0, output_comma 										# address of string to print
+		syscall 													# print string
+		
+		li $v0, 1													# system call code for print_int
+		lw $t5,-4($s2) 												# load the value of i-th array element in $t5
+		move $a0, $t5 												# move value in $t5 (current array element) to $a0
+		syscall 													# print current array element
+			
+		slt $t2, $t7, $t6 											# if ($t7 < $t6) then $t2 = 1 else $t2 = 0
+		beq $t2, $zero, ComputeSecondMax 							# if ($t2 == $zero) then goto ComputeSecondMax label
+		move $t5 , $t6 												# swapping values of $t6 and $t7 using temporary register t5
+		move $t6 , $t7	
+		move $t7 , $t5	
+	
+	ComputeSecondMax: 											# starting of block with ComputeSecondMax label 
+		slt $t2, $t1, $s0 										# if ($t1 < $s0) then $t2 = 1 else $t2 = 0
+		beq $t2, $zero, ComputeSecondMaxDone 					# if ($t2 == $zero) then goto ComputeSecondMaxDone label
+
+		sll $t2, $t1, 2 										# left shift $t1 by 2 bits i.e. multiply i (loop variable) with 4 and put the result in $t2
+		sub $s2, $fp, $t2 										# $s2 points to the address $fp - 4*$t1
+		sub $s2, $s2, 8 										# $s2 points to the address ($fp - 4*$t1 - 8) (i.e. the address of array[i])
+
+		li $v0, 4												# system call code for print_str
+		la $a0, output_comma 									# address of string to print
+		syscall 												# print string
+		li $v0, 1												# system call code for print_int
+		lw $t5,0($s2) 											# load the value of i-th array element in $t5
+		move $a0, $t5 											# move value in $t5 (current array element) to $a0
+		syscall 												# print current array element
+
+		slt $t2, $t5, $t6 										# if ($t5 < $t6) then $t2 = 1 else $t2 = 0
+		beq $t2, 1, continue 									# if($t2 == 1) then goto continue label (no updation to $t6 or $t7 is needed)
+		slt $t2, $t5, $t7 										# if ($t5 < $t7) then $t2 = 1 else $t2 = 0
+		beq $t2, 1, update_2nd 									# if($t2 == 1) then goto update_2nd label (only $t6 needs to be updated)
+		beq $t2, 0, update_both 								# if($t2 == 0) then goto update_both label (both $t7 and $t6 need to be updated)
+
+	update_2nd: 												# starting of block with update_2nd label (visited when only $t6 needs to be updated)
+		move $t6,$t5 											# update $t6 value with $t5
+		b continue 												# goto continue label
+
+	update_both: 												# starting of block with update_both label (visited when both $t7 and $t6 need to be updated)
+		move $t6,$t7											# update $t6 value with $t7
+		move $t7,$t5 											# update $t7 value with $t5
+
+	continue: 													# starting of block with continue label
+
+		addi $t1, $t1, 1 										# incrementing loop variable $t1 (i) by 1 
+		j ComputeSecondMax										# goto ComputeSecondMax label to continue to next iteration
+
+	ComputeSecondMaxDone: 										# beginning of ComputeSecondMaxDone label (end of second loop)
+
+	li $v0, 4													# system call code for print_str
+	la $a0, output_mid 											# address of string to print
+	syscall 													# print string
+
+	li $v0, 1													# system call code for print_int
+	move $a0, $t6												# move value in $t6 (second highest array element) to $a0
+	syscall														# print second highest array element
+		
+	li $v0, 4													# system call code for print_str
+	la $a0, output_period 										# address of string to print
+	syscall 													#print string
+
+	move $s0,$t0 												# move value in $t0 (n) to $s0
+	sll $s1,$s0,2 												# left shift $s0 by 2 bits i.e. multiply n with 4
+
+	add $sp,$sp,$s1 											# move stack pointer ($sp) by 4*n ($s1) bytes to deallocate memory allocated initially for array
+	Final:
+	add $sp,$sp,4 												# move stack pointer ($sp) by 4 bytes to deallocate memory allocated initially for n
+	
+	li $v0, 10 													# system call code for exiting program
+	syscall 													# make syscall to exit program

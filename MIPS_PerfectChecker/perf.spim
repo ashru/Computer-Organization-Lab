@@ -1,0 +1,87 @@
+# Assignment 8 - Perfect number checking
+# Ashrujit Ghoshal (14CS10060)
+# Sayan Ghosh (14CS10061)
+# Group No-4
+
+# Registers used :
+# a0 -> used to hold the value of address of string being printed at the console or value of integer being output at console
+# v0 -> syscall parameter
+# t1 -> stores the counter
+# t2 -> stores the sum
+# t0 -> stores the input integer 
+# t3 -> stores the remainder each time
+
+main:   # SPIM starts execution at main
+	.data 
+	input: .asciiz "Enter a positive integer: "     # input prompt at console
+	posoutput: .asciiz " is a perfect number."      # output prompt at console
+	negoutput: .asciiz " is not a perfect number."  # output prompt at console
+
+	.text
+
+	la $a0,input        # address of the string to print is loaded 
+	li $v0,4	        # 4 is the code for print_str in system call
+	syscall             # system call to print
+	
+	li $v0,5            # 5 is the code for input in system call
+	syscall		        # taking an integer as input in $v0
+	move $t0,$v0        # storing input integer in $t0
+	
+	li $t1,2	        # initializing counter of loop from 2 as 1 is always a factor
+	li $t2,1            # initializing sum as 1 as 1 is always a factor
+	
+	                     
+	beq $t0,1,input1    # checking if input integer is 1
+	b loop              # if input integer is not 1 then continue to the loop part
+
+input1:                 # if input is 1 then print not a perfect number and exit the program
+	
+	li $v0,1            # 1 is the code for print_int in system call
+	move $a0,$t0	    # moving the number from t0 to a0 for printing
+	syscall             # system call to print 
+	
+	la $a0,negoutput	# address of the string to print is loaded 
+	li $v0,4            # 4 is the code for print_str in system call
+	syscall             # system call to print
+	
+	li $v0,10           # 10 is the code for system exit in system call
+	syscall             # exit the program
+
+loop:                   # the looping block to check for all the divisors of n (input number)
+	bge $t1,$t0,endloop # check if counter<n or not ( We check the reverse condition , i.e. if counter >= n then go to endloop block)
+	rem $t3,$t0,$t1     # if yes then calculate remainder of n and counter and store in t3
+	beqz $t3,addvalue   # check remainder of n/counter is 0 or not
+	b endif             # if no then exit if ,  branch to endif block
+
+addvalue:               # block to add value of counter to sum
+	add $t2,$t2,$t1	    # add counter to sum if remainder is 0
+		
+endif:                  # if rem != 0 then we just simply increment counter by 1 in this block
+	add $t1,$t1,1       # increment counter by 1
+	b loop				# continue looping
+
+endloop:
+	beq $t2,$t0,print   # check if sum is equal to or not
+	
+	li $v0,1            # 1 is the code for print_int in system call
+	move $a0,$t0		# moving the number from t0 to a0 for printing
+	syscall             # system call to print the input number
+	
+	la $a0,negoutput	# address of the string to print is loaded 
+	li $v0,4            # 4 is the code for print_str in system call
+	syscall             # system call to print 
+	
+	b end2if            # proceed or branch to end2if block
+
+print:
+	li $v0,1            # 1 is the code for print_int in system call
+	move $a0,$t0	    # moving the number from t0 to a0 for printing
+	syscall             # system call to print the number
+	
+	la $a0,posoutput	# address of the string to print is loaded 
+	li $v0,4            # 4 is the code to print_str in system call
+	syscall             # system call to print
+
+end2if:
+	li $v0,10           # 10 is the code for exit in system call
+	syscall             # exit system call

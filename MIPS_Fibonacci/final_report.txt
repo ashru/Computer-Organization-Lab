@@ -1,0 +1,74 @@
+Assignment 11
+
+REPORT
+
+
+Name : Ashrujit Ghoshal
+Roll No. : 14CS10060
+Group 4
+
+
+
+The main difference in implementation in high level language and mips is the way memory allocation is handled.
+In high level languages we use heap space for dynamic memory allocation while in assembly language like mips we use stack space.
+When we use malloc in C we are allocating memory in the heap while here we keep the stack pointer moving to free up space when dynamically allocating memory.
+This is the main difference.
+
+
+Implementation is a bit different in C in the sense that while making recursive calls the stack is implicit and we donot need to remember location of return address
+For reduction of complexity here we have used 1 call and a bit of sophisticated string manipulation(appending the end first part of the string to the end)
+In high level languages we may use dynamic programming.It can be implemented in iterative fashion or recursively through memoization.
+
+
+Implementation is simple in high level language but the main concept is similar.
+The basic recursive step is as follows :
+	s(1) = "0"			(base case)
+	s(2) = "01"			(base case)		
+	s(n) = s(n-1).s(n-2)	n>=3    (n denotes the length of the string)
+
+
+The different ways to solve the problem are as follows :
+
+a) Recursive function ( gives exponential time complexity)
+   It will take more space.
+	Code in C for this :
+		// arguments are the length and the address to store the string and also the points where we store the 
+		char* fibword(int m, char* c){
+    
+    			if (m==1)   {*f1=1 ; c = (char*) malloc (sizeof(char)) ; strcpy(c,"0");}
+    			if (m==2)   {*f2=2 ; c = (char*) malloc (2*sizeof(char)) ; strcpy(c,"01");}
+   
+  			char *x,*y;
+  			fibword(m-1,x);
+			fibword(m-2,y);
+			c = (char*) malloc ((sizeof(x)/sizeof(char) +sizeof(y)/sizeof(char) )*sizeof(char)) ; 
+			strcpy(c,x);
+			strcat(c,y);	 			
+
+		}
+
+
+b) Iterative approach with two extra variables to store the last two strings . Concept of dynamic programming is used in this case as we save the subproblems 
+   to compute the larger one. 
+
+	#include<stdio.h>
+	#include<string.h>
+	void main()
+	{
+	 char a[100]="0";
+	 char b[100]="01";
+	 char temp[100];
+	 int i,n;
+	 printf("Enter how many words do you want");
+	 scanf("%d",&n);
+	 printf("%s %s",a,b);
+	 for(i=0;i<n-2;i++)
+	 {
+	   strcpy(temp,b);
+	   strcat(b,a);
+	   strcpy(a,temp);		
+	   printf(" %s",b);
+ 	}
+	
+	} 
+
